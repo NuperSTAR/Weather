@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5-Day Weather Forecast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .title {
+            text-align: center;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        #city {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #getForecast {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #getForecast:hover {
+            background-color: #0056b3;
+        }
+
+        .current-weather-card {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .current-weather {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .current-temperature {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .current-description {
+            font-size: 18px;
+        }
+
+        .current-weather-icon {
+            width: 80px;
+            height: 80px;
+            margin-left: 20px;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .forecast-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .forecast-card {
+            width: 150px;
+            margin: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .date {
+            font-weight: bold;
+        }
+
+        .weather-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+        .temperature {
+            font-size: 18px;
+        }
+
+        .description {
+            margin-top: 5px;
+        }
+        
+        .weather-radar {
+            width: 750px;
+            margin: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Advanced Weather</h1>
+        <div class="search-container">
+            <label for="city">Enter City Name:</label>
+            <input type="text" id="city" placeholder="Enter city name">
+            <button id="getForecast">Get Weather</button>
+        <div id="currentWeatherCard" class="current-weather-card"></div>
+        <h2 class="subtitle">5-Day Forecast</h2>
+        <div id="forecastCards" class="forecast-container"></div>
+         <h2 class="subtitle">Weather Radar</h2>
+        <div class="weather-radar">
+         <iframe src="https://nuperstar.github.io/TWC/" width="100%" height="300" style="border:1px solid black;">
+</iframe>
+
+        </div>
+        <p class="subtitle">Powered by OpenWeatherMap</p>
+           
+        
+     
+    </div>
+
+    <script>
+        const apiKey = '1f66dd79358380ec43a3317593f2c586'; // Replace with your OpenWeatherMap API key
+
+        document.getElementById('getForecast').addEventListener('click', () => {
+            const city = document.getElementById('city').value;
+            if (city.trim() !== '') {
+                getWeatherAndForecast(city);
+            }
+        });
+
+        async function getWeatherAndForecast(city) {
+            const currentWeatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`);
+            const currentWeatherData = await currentWeatherResponse.json();
+
+            const forecastResponse = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}`);
+            const forecastData = await forecastResponse.json();
+
+            if (currentWeatherResponse.status === 200 && forecastResponse.status === 200) {
+                // Display current weather card
+                const currentWeatherCard = document.getElementById('currentWeatherCard');
+                const currentTemperatureCelsius = (currentWeatherData.main.temp - 273.15).toFixed(2);
+                const currentTemperatureFahrenheit = ((currentTemperatureCelsius * 9/5) + 32).toFixed(2);
+                const currentWeatherDescription = currentWeatherData.weather[0].description;
+                const currentWeatherIconCode = currentWeatherData.weather[0].icon;
+
+                currentWeatherCard.innerHTML = `
+                    <div class="current-weather">
+                        <p class="current-temperature">${currentTemperatureFahrenheit}°F</p>
+                        <p class="current-description">${currentWeatherDescription}</p>
+                        <img class="current-weather-icon" src="http://openweathermap.org/img/wn/${currentWeatherIconCode}.png" alt="Weather Icon">
+                    </div>
+                `;
+
+ // Display 5-day forecast cards
+const forecastCards = document.getElementById('forecastCards');
+forecastCards.innerHTML = '';
+
+const forecasts = forecastData.list.filter(item => item.dt_txt.includes('12:00:00'));
+                
+forecasts.forEach(forecast => {
+    const date = new Date(forecast.dt * 1000);
+  const maxTemperatureCelsius = (forecast.main.temp_max - 273.15).toFixed(2);
+    const maxTemperatureFahrenheit = ((maxTemperatureCelsius * 9/5) + 32).toFixed(2);
+    const description = forecast.weather[0].description;
+    const iconCode = forecast.weather[0].icon;
+
+    const card = document.createElement('div');
+    card.classList.add('forecast-card');
+    card.innerHTML = `
+        <p class="date">${date.toDateString()}</p>
+        <img class="weather-icon" src="http://openweathermap.org/img/wn/${iconCode}.png" alt="Weather Icon">
+        <p class="temperature">Max: ${maxTemperatureFahrenheit}°F</p>
+        <p class="description">${description}</p>
+    `;
+    forecastCards.appendChild(card);
+});
+
+            } else {
+                alert('City not found. Please enter a valid city name.');
+            }
+        }
+    </script>
+</body>
+</html>
